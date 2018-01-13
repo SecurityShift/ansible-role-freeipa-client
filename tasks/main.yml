@@ -33,6 +33,7 @@
     --principal {{ ipaserver_admin_username }}@{{ ipaserver_realm }}
     --password {{ ipaserver_admin_password }}
     --hostname={{ ansible_fqdn }}
+    --enable-dns-updates
     {{ '--mkhomedir' if ipaclient_mkhomedir | default(True) else '' }}
     {{ '--ssh-trust-dns' if ipaclient_ssh_trust_dns | default(False) else '' }}
     {{ '' if ipaclient_setup_ntp | default(True) else '--no-ntp' }}

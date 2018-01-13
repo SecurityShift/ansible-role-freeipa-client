@@ -22,5 +22,4 @@ galaxy_info:
 
   galaxy_tags: ['ipaclient','freeipa','install',kerberos','security','identity']
 
-dependencies:
-  - yabhinav.common
+dependencies: []
