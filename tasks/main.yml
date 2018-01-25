@@ -15,7 +15,7 @@
 
 - name: Install IPA Client Packages
   action: >
-    {{ ansible_pkg_mgr }}  name="{{ item }}" state=latest
+    {{ ansible_pkg_mgr }}  name="{{ item }}" state=present
   with_items: "{{ ipaclient_packages }}"
   become: True
 
@@ -28,12 +28,11 @@
   shell: >
     {{ ipaclient_base_command }}
     --force-join
-    --realm {{ipaserver_realm}}
+    --realm {{ ipaserver_realm }}
     --domain {{ ipaserver_domain }}
     --principal {{ ipaserver_admin_username }}@{{ ipaserver_realm }}
     --password {{ ipaserver_admin_password }}
-    --hostname={{ ansible_fqdn }}
-    --enable-dns-updates
+    --hostname={{ inventory_hostname }}
     {{ '--mkhomedir' if ipaclient_mkhomedir | default(True) else '' }}
     {{ '--ssh-trust-dns' if ipaclient_ssh_trust_dns | default(False) else '' }}
     {{ '' if ipaclient_setup_ntp | default(True) else '--no-ntp' }}
@@ -44,19 +43,34 @@
   register: ipaclientsetup
   become: True
 
-- name: IPA | Register host with IPA server
-  ipa_host:
-    name: '{{ inventory_hostname }}'
-    description: '{{ host_description | default("") }}'
-    ip_address: '{{ admin_ip }}'
-    ns_host_location: Melbourne
-    ns_os_version: CentOS 7
-    ns_hardware_platform: Lenovo T61
+- name: IPA | Create a host group
+  ipa_hostgroup:
+    name: '{{ ipa_hostgroup }}'
+    description: '{{ host_description }}'
+    host: '{{ inventory_hostname }}'
     state: present
     ipa_host: '{{ ipa_host }}'
     ipa_user: admin
     ipa_pass: '{{ ipaserver_admin_password }}'
-  ignore_errors: true
+    validate_certs: False
+  when: ipa_hostgroup is defined
+
+- name: IPA | Register host with IPA server
+  ipa_host:
+    name: '{{ inventory_hostname }}'
+    description: '{{ host_description | default("") }}'
+    ip_address: '{{ ansible_host }}'
+    ns_host_location: Melbourne
+    ns_os_version: '{{ ansible_distribution }} {{ ansible_distribution_major_version }}'
+    ns_hardware_platform: '{{ ansible_system_vendor }}'
+    state: present
+    ipa_host: '{{ ipa_host }}'
+    ipa_user: admin
+    ipa_pass: '{{ ipaserver_admin_password }}'
+    validate_certs: False
+    update_dns: True
   tags:
     - ipa
 
+- name: Request a host certificate from IPA
+  import_tasks: certificates.yml
