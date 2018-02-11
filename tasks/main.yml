@@ -47,13 +47,15 @@
   ipa_hostgroup:
     name: '{{ ipa_hostgroup }}'
     description: '{{ host_description }}'
-    host: '{{ inventory_hostname }}'
+    host: '{{ groups["ipa"] }}'
     state: present
     ipa_host: '{{ ipa_host }}'
     ipa_user: admin
     ipa_pass: '{{ ipaserver_admin_password }}'
     validate_certs: False
   when: ipa_hostgroup is defined
+  run_once: true
+
 
 - name: IPA | Register host with IPA server
   ipa_host:
@@ -68,7 +70,7 @@
     ipa_user: admin
     ipa_pass: '{{ ipaserver_admin_password }}'
     validate_certs: False
-    update_dns: True
+    #update_dns: True
   tags:
     - ipa
 
