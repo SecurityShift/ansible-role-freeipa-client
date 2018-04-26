@@ -4,19 +4,7 @@
   yum:
     name: '{{ item }}'
     state: 'latest'
-  with_items: [ 'dbus', 'certmonger', 'nss-tools' ]
-
-
-- name: Find if custom_rpm is installed
-  yum:
-    list: certmonger
-  register: certmonger_packages
-
-- name: Extract custom_rpm actual installed version
-  set_fact:
-     freeipa_client_register_certmonger_version:  "{{certmonger_packages|json_query(jsonquery)}}"
-  vars:
-     jsonquery: "results[?yumstate=='installed'].version"
+  with_items: [ 'dbus', 'certmonger', 'nss-tools', 'pynag' ]
 
 # ----------------------------------
 #   NSS Certificates (IPA default)
@@ -39,6 +27,7 @@
   shell: certutil -L -n 'IPA CA' -d '{{ freeipa_client_nss_path }}' || true
   register: freeipa_register_cacrt
   changed_when: False
+  check_mode: no
 
 - name: Add IPA CA certificate to NSS database
   command: certutil -A -d '{{ freeipa_client_nss_path }}' -n 'IPA CA' -t CT,C,C -a -i /etc/ipa/ca.crt
@@ -75,11 +64,12 @@
 
 - name: Request SSL host certificate
   command: ipa-getcert request \
-    -r '{{ "-w" if freeipa_client_register_certmonger_version is version_compare("0.75", ">=") else "-v" }}' \
+    -r -w
     -k '{{ freeipa_client_pem_key_path }}/{{ ansible_fqdn }}.key' \
     -f '{{ freeipa_client_pem_cert_path }}/{{ ansible_fqdn }}.crt' \
     -g '{{ freeipa_client_cert_key_size }}' -K 'host/{{ ansible_fqdn }}' \
     -N 'CN={{ ansible_fqdn }},O={{ ipaserver_realm }}' \
+    -D '{{ inventory_hostname }}' \
     -U id-kp-serverAuth
   args:
     creates: '{{ freeipa_client_pem_cert_path }}/{{ ansible_fqdn }}.crt'
@@ -120,3 +110,36 @@
     chdir: '/etc/ssl/certs'
     creates: '{{ freeipa_client_register_pem_ca_hash.stdout }}.0'
   when: freeipa_client_register_pem_ca_trust.changed
+
+- name: copy check_certmonger
+  copy:
+    src: check_certmonger
+    dest: /usr/lib64/nagios/plugins/check_certmonger
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - monitoring
+
+- name: copy nrpe check definition
+  template:
+    src: check_certmonger.cfg.j2
+    dest: /etc/nrpe.d/check_certmonger.cfg
+    owner: nrpe
+    group: nrpe
+    mode: 0644
+  notify: restart nrpe
+  tags:
+    - monitoring
+
+- name: Allow nrpe to sudo ipa get-cert
+  template:
+    src: 50-nrpe-check-certmonger.j2
+    dest: /etc/sudoers.d/50-nrpe-check-certmonger
+    owner: root
+    group: root
+    mode: 0640
+  tags:
+    - monitoring
+
+

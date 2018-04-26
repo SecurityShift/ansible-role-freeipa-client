@@ -31,8 +31,13 @@
     --realm {{ ipaserver_realm }}
     --domain {{ ipaserver_domain }}
     --principal {{ ipaserver_admin_username }}@{{ ipaserver_realm }}
-    --password {{ ipaserver_admin_password }}
+    --password '{{ ipaserver_admin_password }}'
     --hostname={{ inventory_hostname }}
+    --enable-dns-updates
+    {% for host in groups['ipaservers'] %}
+    --ntp-server={{ hostvars[host]['ansible_host'] }}
+    {% endfor %}
+    --force-ntpd
     {{ '--mkhomedir' if ipaclient_mkhomedir | default(True) else '' }}
     {{ '--ssh-trust-dns' if ipaclient_ssh_trust_dns | default(False) else '' }}
     {{ '' if ipaclient_setup_ntp | default(True) else '--no-ntp' }}
@@ -47,7 +52,7 @@
   ipa_hostgroup:
     name: '{{ ipa_hostgroup }}'
     description: '{{ host_description }}'
-    host: '{{ groups["ipa"] }}'
+    host: '{{ groups[ipa_hostgroup] }}'
     state: present
     ipa_host: '{{ ipaserver_master }}'
     ipa_user: admin
@@ -70,7 +75,6 @@
     ipa_user: admin
     ipa_pass: '{{ ipaserver_admin_password }}'
     validate_certs: False
-    #update_dns: True
   tags:
     - ipa
 
