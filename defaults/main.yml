@@ -75,3 +75,4 @@ freeipa_client_cert_key_size: '2048'
 #
 # Owner group of the private key
 freeipa_client_cert_key_group: 'root'
+

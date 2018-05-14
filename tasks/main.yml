@@ -1,5 +1,13 @@
 ---
 
+- name: Check that ipa server is available
+  uri:
+    url: 'https://{{ ipaserver_master }}'
+    validate_certs: False
+  ignore_errors: true
+  register: ipa_status
+  check_mode: no
+
 - name: Gather OS Specific Variables
   include_vars: "{{ item }}"
   with_first_found:
@@ -19,7 +27,7 @@
   with_items: "{{ ipaclient_packages }}"
   become: True
 
-- name: Run the IPA Client uninstaller
+- name: Run the IPA Client uninstaller, when ipaclient_reconfigure=True
   shell: "{{ ipaclient_base_command }} --uninstall"
   when: ipaclient_reconfigure
   become: True
@@ -40,13 +48,14 @@
     --force-ntpd
     {{ '--mkhomedir' if ipaclient_mkhomedir | default(True) else '' }}
     {{ '--ssh-trust-dns' if ipaclient_ssh_trust_dns | default(False) else '' }}
-    {{ '' if ipaclient_setup_ntp | default(True) else '--no-ntp' }}
+    {{ '' if ipaclient_setup_ntp | default(False) else '--no-ntp' }}
     {{ '' if ipaclient_configure_ssh | default(True) else '--no-ssh' }}
     {{ '' if ipaclient_configure_sshd | default(True) else '--no-sshd' }}
   args:
     creates: /etc/ipa/default.conf  #already configured, set ipaclient_reconfigure True
   register: ipaclientsetup
   become: True
+  when: ipa_status is defined and ipa_status.status == 200
 
 - name: IPA | Create a host group
   ipa_hostgroup:
@@ -58,7 +67,7 @@
     ipa_user: admin
     ipa_pass: '{{ ipaserver_admin_password }}'
     validate_certs: False
-  when: ipa_hostgroup is defined
+  when: ipa_hostgroup is defined and ipa_status is defined and ipa_status.status == 200
   run_once: true
 
 
@@ -75,8 +84,6 @@
     ipa_user: admin
     ipa_pass: '{{ ipaserver_admin_password }}'
     validate_certs: False
+  when: ipa_status is defined and ipa_status.status == 200
   tags:
     - ipa
-
-- name: Request a host certificate from IPA
-  import_tasks: certificates.yml
