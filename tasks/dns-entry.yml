@@ -1,0 +1,19 @@
+---
+
+- name: Add dns entry for service endpoint
+  connection: local
+  become: false
+  ipa_dnsrecord:
+    state: present
+    zone_name: '{{ service_zone | default("{{ location }}.{{ base_domain }}") }}'
+    record_name: '{{ service_address_name }}'
+    record_type: '{{ service_address_type | default("A") }}'
+    record_value: '{{ service_address_record }}'
+    ipa_host: '{{ ipaserver_master }}'
+    ipa_user: admin
+    ipa_pass: '{{ ipaserver_admin_password }}'
+    validate_certs: False
+  tags:
+    - dns
+
+
