@@ -45,10 +45,9 @@
     {% for host in groups['ipaservers'] %}
     --ntp-server={{ hostvars[host]['ansible_host'] }}
     {% endfor %}
-    --force-ntpd
     {{ '--mkhomedir' if ipaclient_mkhomedir | default(True) else '' }}
     {{ '--ssh-trust-dns' if ipaclient_ssh_trust_dns | default(False) else '' }}
-    {{ '' if ipaclient_setup_ntp | default(False) else '--no-ntp' }}
+    {{ '--force-ntpd' if ipaclient_setup_ntp | default(False) else '--no-ntp' }}
     {{ '' if ipaclient_configure_ssh | default(True) else '--no-ssh' }}
     {{ '' if ipaclient_configure_sshd | default(True) else '--no-sshd' }}
   args:
