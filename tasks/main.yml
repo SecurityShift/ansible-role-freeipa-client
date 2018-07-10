@@ -7,6 +7,8 @@
   ignore_errors: true
   register: ipa_status
   check_mode: no
+  tags:
+    - ipaclient
 
 - name: Gather OS Specific Variables
   include_vars: "{{ item }}"
@@ -26,11 +28,15 @@
     {{ ansible_pkg_mgr }}  name="{{ item }}" state=present
   with_items: "{{ ipaclient_packages }}"
   become: True
+  tags:
+    - install
 
 - name: Run the IPA Client uninstaller, when ipaclient_reconfigure=True
   shell: "{{ ipaclient_base_command }} --uninstall"
   when: ipaclient_reconfigure
   become: True
+  tags:
+    - uninstall
 
 - name: Run the IPA Client installer
   shell: >
@@ -55,6 +61,8 @@
   register: ipaclientsetup
   become: True
   when: ipa_status is defined and ipa_status.status == 200
+  tags:
+    - install
 
 - name: IPA | Create a host group
   ipa_hostgroup:
@@ -68,7 +76,8 @@
     validate_certs: False
   when: ipa_hostgroup is defined and ipa_status is defined and ipa_status.status == 200
   run_once: true
-
+  tags:
+    - config
 
 - name: IPA | Register host with IPA server
   ipa_host:
@@ -85,4 +94,4 @@
     validate_certs: False
   when: ipa_status is defined and ipa_status.status == 200
   tags:
-    - ipa
+    - config
