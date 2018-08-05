@@ -1,6 +1,8 @@
 ---
 # defaults file for ansible-role-ipaclient
 
+ipaclient_role_git_repo: https://github.com/SecurityShift/ansible-role-freeipa-client
+
 # IPA Serever Keberos Realm and Domain
 ipaserver_realm: "{{ ansible_domain | upper }}"
 ipaserver_domain: "{{ ansible_domain }}"

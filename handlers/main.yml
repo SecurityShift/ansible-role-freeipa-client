@@ -1,5 +1,2 @@
 ---
 
-- name: Restart certmonger
-  service: name=certmonger state=restarted
-
