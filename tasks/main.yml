@@ -67,7 +67,7 @@
 - name: IPA | Create a host group
   ipa_hostgroup:
     name: '{{ ipa_hostgroup }}'
-    description: '{{ host_description }}'
+    description: '{{ host_description | default(omit) }}'
     host: '{{ groups[ipa_hostgroup] }}'
     state: present
     ipa_host: '{{ ipaserver_master }}'
