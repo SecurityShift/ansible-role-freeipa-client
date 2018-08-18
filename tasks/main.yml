@@ -1,4 +1,5 @@
 ---
+# tasks file for freeipa-client
 
 - name: Check that ipa server is available
   uri:

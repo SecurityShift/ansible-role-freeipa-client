@@ -1,5 +1,5 @@
 ---
-# defaults file for ansible-role-ipaclient
+# defaults file for freeipa-client
 
 ipaclient_role_git_repo: https://github.com/SecurityShift/ansible-role-freeipa-client
 
