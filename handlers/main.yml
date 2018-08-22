@@ -1,2 +1,3 @@
 ---
-
+- name: update ca certs
+  command: update-ca-trust
