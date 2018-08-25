@@ -74,7 +74,7 @@
     - config
     - ssl
 
-- name: IPA | Create a host group
+- name: Create an IPA host group
   ipa_hostgroup:
     name: '{{ ipa_hostgroup }}'
     description: '{{ host_description | default(omit) }}'
@@ -89,19 +89,19 @@
   tags:
     - config
 
-#- name: IPA | Register host with IPA server
-#  ipa_host:
-#    name: '{{ inventory_hostname }}'
-#    description: '{{ host_description | default("") }}'
-#    ip_address: '{{ ansible_host }}'
-#    ns_host_location: '{{ ipa_location }}'
-#    ns_os_version: '{{ ansible_distribution }} {{ ansible_distribution_major_version }}'
-#    ns_hardware_platform: '{{ ansible_system_vendor }}'
-#    state: present
-#    ipa_host: '{{ ipaserver_master }}'
-#    ipa_user: admin
-#    ipa_pass: '{{ ipaserver_admin_password }}'
-#    validate_certs: False
-#  when: ipa_status is defined and ipa_status.status == 200
-#  tags:
-#    - config
+- name: Register host with IPA server
+  ipa_host:
+    name: '{{ inventory_hostname }}'
+    description: '{{ host_description | default("") }}'
+    ip_address: '{{ ansible_host }}'
+    ns_host_location: '{{ ipa_location }}'
+    ns_os_version: '{{ ansible_distribution }} {{ ansible_distribution_major_version }}'
+    ns_hardware_platform: '{{ ansible_system_vendor }}'
+    state: present
+    ipa_host: '{{ ipaserver_master }}'
+    ipa_user: admin
+    ipa_pass: '{{ ipaserver_admin_password }}'
+    validate_certs: False
+  when: ipa_status is defined and ipa_status.status == 200
+  tags:
+    - config
