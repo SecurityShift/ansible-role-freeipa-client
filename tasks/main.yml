@@ -9,7 +9,7 @@
   register: ipa_status
   check_mode: no
   tags:
-    - ipaclient
+    - always
 
 - name: Gather OS Specific Variables
   include_vars: "{{ item }}"
