@@ -25,9 +25,9 @@
         - "{{ role_path }}/vars"
 
 - name: Install IPA Client Packages
-  action: >
-    {{ ansible_pkg_mgr }}  name="{{ item }}" state=present
-  with_items: "{{ ipaclient_packages }}"
+  yum:
+    name: "{{ ipaclient_packages }}"
+    state: present
   become: True
   tags:
     - install
